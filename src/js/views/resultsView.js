@@ -2,9 +2,48 @@ import View from './view';
 import icons from 'url:../../img/icons.svg';
 
 class ResultsView extends View {
-  _parentElement = document.querySelector('.results');
-  _errorMessage = 'No recipes found!!!';
-  _message = '';
+  constructor() {
+    super();
+    this._parentElement = document.querySelector('.results');
+    this._errorMessage = 'No recipes found!!!';
+    this._message = '';
+  }
+
+  get parentElement() {
+    return this._parentElement;
+  }
+
+  set parentElement(element) {
+    if (element instanceof HTMLElement) {
+      this._parentElement = element;
+    } else {
+      throw new Error('Invalid element type. Expected an HTMLElement.');
+    }
+  }
+
+  get errorMessage() {
+    return this._errorMessage;
+  }
+
+  set errorMessage(message) {
+    if (typeof message === 'string') {
+      this._errorMessage = message;
+    } else {
+      throw new Error('Invalid message type. Expected a string.');
+    }
+  }
+
+  get message() {
+    return this._message;
+  }
+
+  set message(message) {
+    if (typeof message === 'string') {
+      this._message = message;
+    } else {
+      throw new Error('Invalid message type. Expected a string.');
+    }
+  }
 
   _generateMarkup() {
     return this._data.map(this._generateMarkupPreview).join('');

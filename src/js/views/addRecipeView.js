@@ -2,39 +2,110 @@ import View from './view';
 import icons from 'url:../../img/icons.svg';
 
 class AddRecipeView extends View {
-  _parentElement = document.querySelector('.upload');
-  _message = 'Recipe eas successfully uploaded';
-
-  _window = document.querySelector('.add-recipe-window');
-  _overlay = document.querySelector('.overlay');
-  _btnOpen = document.querySelector('.nav__btn--add-recipe');
-  _btnClose = document.querySelector('.btn--close-modal');
-
   constructor() {
     super();
-    this._addHandlerShowWindow();
-    this._addHandlerHideWindow();
+    this._mainElement = document.querySelector('.upload');
+    this._successMessage = 'Recipe was successfully uploaded';
+    this._popupWindow = document.querySelector('.add-recipe-window');
+    this._screenOverlay = document.querySelector('.overlay');
+    this._openButton = document.querySelector('.nav__btn--add-recipe');
+    this._closeButton = document.querySelector('.btn--close-modal');
+
+    this._setupShowWindowHandler();
+    this._setupHideWindowHandler();
   }
 
-  toggleWindow() {
-    this._overlay.classList.toggle('hidden');
-    this._window.classList.toggle('hidden');
+  get mainElement() {
+    return this._mainElement;
   }
 
-  _addHandlerShowWindow() {
-    this._btnOpen.addEventListener('click', this.toggleWindow.bind(this));
+  set mainElement(element) {
+    if (element instanceof HTMLElement) {
+      this._mainElement = element;
+    } else {
+      throw new Error('Invalid element type. Expected an HTMLElement.');
+    }
   }
 
-  _addHandlerHideWindow() {
-    this._overlay.addEventListener('click', this.toggleWindow.bind(this));
+  get successMessage() {
+    return this._successMessage;
   }
 
-  addHandlerUpload(handler) {
-    this._parentElement.addEventListener('submit', function (e) {
+  set successMessage(message) {
+    if (typeof message === 'string') {
+      this._successMessage = message;
+    } else {
+      throw new Error('Invalid message type. Expected a string.');
+    }
+  }
+
+  get popupWindow() {
+    return this._popupWindow;
+  }
+
+  set popupWindow(element) {
+    if (element instanceof HTMLElement) {
+      this._popupWindow = element;
+    } else {
+      throw new Error('Invalid element type. Expected an HTMLElement.');
+    }
+  }
+
+  get screenOverlay() {
+    return this._screenOverlay;
+  }
+
+  set screenOverlay(element) {
+    if (element instanceof HTMLElement) {
+      this._screenOverlay = element;
+    } else {
+      throw new Error('Invalid element type. Expected an HTMLElement.');
+    }
+  }
+
+  get openButton() {
+    return this._openButton;
+  }
+
+  set openButton(element) {
+    if (element instanceof HTMLElement) {
+      this._openButton = element;
+    } else {
+      throw new Error('Invalid element type. Expected an HTMLElement.');
+    }
+  }
+
+  get closeButton() {
+    return this._closeButton;
+  }
+
+  set closeButton(element) {
+    if (element instanceof HTMLElement) {
+      this._closeButton = element;
+    } else {
+      throw new Error('Invalid element type. Expected an HTMLElement.');
+    }
+  }
+
+  togglePopup() {
+    this._screenOverlay.classList.toggle('hidden');
+    this._popupWindow.classList.toggle('hidden');
+  }
+
+  _setupShowWindowHandler() {
+    this._openButton.addEventListener('click', this.togglePopup.bind(this));
+  }
+
+  _setupHideWindowHandler() {
+    this._screenOverlay.addEventListener('click', this.togglePopup.bind(this));
+  }
+
+  setupUploadHandler(handler) {
+    this._mainElement.addEventListener('submit', function (e) {
       e.preventDefault();
-      const dataArray = [...new FormData(this)];
-      const data = Object.fromEntries(dataArray);
-      handler(data);
+      const formDataArray = [...new FormData(this)];
+      const formData = Object.fromEntries(formDataArray);
+      handler(formData);
     });
   }
 
