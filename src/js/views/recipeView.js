@@ -1,16 +1,31 @@
 import View from './view';
 import icons from 'url:../../img/icons.svg';
 import Fraction from 'fractional';
+import LocomotiveScroll from 'locomotive-scroll'; // імпорт бібліотеки
 
 class RecipeView extends View {
   _parentElement = document.querySelector('.recipe');
   _errorMessage = 'Try once more!!!';
   _message = '';
 
+  constructor() {
+    super();
+    this._initLocomotiveScroll(); // ініціалізація Locomotive Scroll
+  }
+
+  _initLocomotiveScroll() {
+    this._scroll = new LocomotiveScroll({
+      el: document.querySelector('.scroll-container'),
+      smooth: true
+    });
+  }
+
   addHandlerRender(handler) {
     ['hashchange', 'load'].forEach(ev => window.addEventListener(ev, () => {
       handler();
+      // Перемістити до верху після оновлення даних
       this._parentElement.scrollIntoView({ behavior: 'smooth' });
+      this._scroll.update(); // оновити Locomotive Scroll після зміни контенту
     }));
   }
 
