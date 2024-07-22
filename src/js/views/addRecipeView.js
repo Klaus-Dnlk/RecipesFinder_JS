@@ -1,5 +1,10 @@
 import View from './view';
 import icons from 'url:../../img/icons.svg';
+import FilePond from 'filepond';
+import 'filepond/dist/filepond.min.css';
+import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css';
+import { FilePondPluginImagePreview } from 'filepond-plugin-image-preview';
+import { FilePondPluginFileValidateType } from 'filepond-plugin-file-validate-type';
 
 class AddRecipeView extends View {
   constructor() {
@@ -13,6 +18,16 @@ class AddRecipeView extends View {
 
     this._setupShowWindowHandler();
     this._setupHideWindowHandler();
+
+    FilePond.registerPlugin(FilePondPluginImagePreview, FilePondPluginFileValidateType);
+
+    this._filePond = FilePond.create(document.querySelector('input.filepond'), {
+      allowMultiple: false,
+      maxFiles: 1,
+      acceptedFileTypes: ['image/*'],
+      imagePreviewHeight: 200,
+      labelIdle: 'Drag & Drop your image or <span class="filepond--label-action">Browse</span>'
+    });
   }
 
   get mainElement() {
@@ -98,14 +113,22 @@ class AddRecipeView extends View {
 
   _setupHideWindowHandler() {
     this._screenOverlay.addEventListener('click', this.togglePopup.bind(this));
+    this._closeButton.addEventListener('click', this.togglePopup.bind(this));
   }
 
   setupUploadHandler(handler) {
     this._mainElement.addEventListener('submit', function (e) {
       e.preventDefault();
-      const formDataArray = [...new FormData(this)];
-      const formData = Object.fromEntries(formDataArray);
-      handler(formData);
+      const formData = new FormData(this);
+      
+      formData.append('image', this._filePond.getFile()?.file);
+
+      const formObject = {};
+      formData.forEach((value, key) => {
+        formObject[key] = value;
+      });
+
+      handler(formObject);
     });
   }
 

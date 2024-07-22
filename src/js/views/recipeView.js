@@ -8,7 +8,10 @@ class RecipeView extends View {
   _message = '';
 
   addHandlerRender(handler) {
-    ['hashchange', 'load'].forEach(ev => window.addEventListener(ev, handler));
+    ['hashchange', 'load'].forEach(ev => window.addEventListener(ev, () => {
+      handler();
+      this._parentElement.scrollIntoView({ behavior: 'smooth' });
+    }));
   }
 
   addHandlerUpdateServings(handler) {

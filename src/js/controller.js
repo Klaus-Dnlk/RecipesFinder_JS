@@ -10,125 +10,105 @@ import paginationView from './views/paginationView.js';
 import bookmarksView from './views/bookmarksView.js';
 import addRecipeView from './views/addRecipeView.js';
 
-// if (module.hot) {
-//   module.hot.accept();
-// }
+class Controller {
+  constructor() {
+    this.init();
+  }
 
-const controlRecipes = async function () {
-  try {
-    const id = window.location.hash.slice(1);
+  async controlRecipes() {
+    try {
+      const id = window.location.hash.slice(1);
 
-    if (!id) return;
-    recipeView.renderSpinner();
+      if (!id) return;
+      recipeView.renderSpinner();
 
-    // 0) Update results view to mark selected search result
-    resultsView.update(model.getSearchResultsPage());
+      resultsView.update(model.getSearchResultsPage());
+      bookmarksView.update(model.state.bookmarks);
 
-    // 1) Updating bookmarks view
+      await model.loadRecipe(id);
+
+      recipeView.render(model.state.recipe);
+    } catch (err) {
+      recipeView.renderError();
+      console.error(err);
+    }
+  }
+
+  async controlSearchResults() {
+    try {
+      resultsView.renderSpinner();
+      const query = searchView.getQuery();
+      if (!query) return;
+
+      await model.loadSearchResults(query);
+      resultsView.render(model.getSearchResultsPage());
+
+      paginationView.render(model.state.search);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  controlPagination(goToPage) {
+    resultsView.render(model.getSearchResultsPage(goToPage));
+
+    paginationView.render(model.state.search);
+  }
+
+  controlServings(newServings) {
+    model.updateServings(newServings);
+    recipeView.update(model.state.recipe);
+  }
+
+  controlAddBookmark() {
+    if (!model.state.recipe.bookmarked) {
+      model.addBookmark(model.state.recipe);
+    } else {
+      model.deleteBookmark(model.state.recipe.id);
+    }
+
+    recipeView.update(model.state.recipe);
     bookmarksView.update(model.state.bookmarks);
 
-    // 2) Loading recipe
-    await model.loadRecipe(id);
-
-    // 3) Rendering recipe
-    recipeView.render(model.state.recipe);
-  } catch (err) {
-    recipeView.renderError();
-    console.error(err);
-  }
-};
-
-const controlSearchResults = async function () {
-  try {
-    resultsView.renderSpinner();
-    //1) get search query
-    const query = searchView.getQuery();
-    if (!query) return;
-
-    // 2) Load search results
-    await model.loadSearchResults(query);
-
-    // 3) Render results
-    // resultsView.render(model.state.search.results);
-    resultsView.render(model.getSearchResultsPage());
-
-    // 4) Render initial pagination buttons
-    paginationView.render(model.state.search);
-  } catch (error) {
-    console.log(error);
-  }
-};
-const controlPagination = function (goToPage) {
-  // 3) Render new results
-  // resultsView.render(model.state.search.results);
-  resultsView.render(model.getSearchResultsPage(goToPage));
-
-  // 4) Render new pagination buttons
-  paginationView.render(model.state.search);
-};
-
-const controlServings = function (newServings) {
-  //Update the recipe servings (in state)
-  model.updateServings(newServings);
-  //Update the recipe
-  // recipeView.render(model.state.recipe);
-  recipeView.update(model.state.recipe);
-};
-
-const controlAddBookmark = function () {
-  // 1) Add bookmark
-  !model.state.recipe.bookmarked
-    ? model.addBookmark(model.state.recipe)
-    : model.deleteBookmark(model.state.recipe.id);
-
-  // 2) Update recipe view
-  recipeView.update(model.state.recipe);
-  bookmarksView.update(model.state.bookmarks);
-
-  // 3) Render bookmarks
-  bookmarksView.render(model.state.bookmarks);
-};
-
-const controlBookmarks = function () {
-  bookmarksView.render(model.state.bookmarks);
-};
-
-const controlAddRecipe = async function (newRecipe) {
-  try {
-    // Show loading spinner
-    addRecipeView.renderSpinner();
-    await model.uploadRecipe(newRecipe);
-    console.log(model.state.recipe);
-
-    // Render recipe
-    recipeView.render(model.state.recipe);
-
-    // Success message
-    addRecipeView.renderMessage();
-
-    // Render bookmark  view
     bookmarksView.render(model.state.bookmarks);
-
-    // Change ID in the URl
-    window.history.pushState(null, '', `#${model.state.recipe.id}`);
-
-    //Close form Window
-    setTimeout(function () {
-      addRecipeView.toggleWindow();
-    }, MODAL_CLOSE_SEC * 1000);
-  } catch (error) {
-    console.log('*******', error);
-    addRecipeView.renderError(error.message);
   }
-  // Upload the new recipe data
-};
-const init = function () {
-  recipeView.addHandlerRender(controlRecipes);
-  recipeView.addHandlerUpdateServings(controlServings);
-  recipeView.addHandlerAddBookmark(controlAddBookmark);
-  searchView.addHandlerSearch(controlSearchResults);
-  bookmarksView.addHandlerRender(controlBookmarks);
-  paginationView.addHandlerClick(controlPagination);
-  addRecipeView.addHandlerUpload(controlAddRecipe);
-};
-init();
+
+  controlBookmarks() {
+    bookmarksView.render(model.state.bookmarks);
+  }
+
+  async controlAddRecipe(newRecipe) {
+    try {
+      addRecipeView.renderSpinner();
+      await model.uploadRecipe(newRecipe);
+      console.log(model.state.recipe);
+
+      recipeView.render(model.state.recipe);
+
+      addRecipeView.renderMessage();
+
+      bookmarksView.render(model.state.bookmarks);
+
+      window.history.pushState(null, '', `#${model.state.recipe.id}`);
+
+      setTimeout(() => {
+        addRecipeView.toggleWindow();
+      }, MODAL_CLOSE_SEC * 1000);
+    } catch (error) {
+      console.log('*******', error);
+      addRecipeView.renderError(error.message);
+    }
+  }
+
+  init() {
+    recipeView.addHandlerRender(this.controlRecipes.bind(this));
+    recipeView.addHandlerUpdateServings(this.controlServings.bind(this));
+    recipeView.addHandlerAddBookmark(this.controlAddBookmark.bind(this));
+    searchView.addHandlerSearch(this.controlSearchResults.bind(this));
+    bookmarksView.addHandlerRender(this.controlBookmarks.bind(this));
+    paginationView.addHandlerClick(this.controlPagination.bind(this));
+    addRecipeView.addHandlerUpload(this.controlAddRecipe.bind(this));
+  }
+}
+
+export default new Controller();
